@@ -8,6 +8,7 @@ github:
     - gcp-pubsub
     - connector
     - datastream
+  autolink_jira: FLINK
   collaborators:
     - flinkbot
 notifications:
