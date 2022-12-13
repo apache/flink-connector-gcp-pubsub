@@ -17,7 +17,7 @@
 
 package org.apache.flink.streaming.connectors.gcp.pubsub.emulator;
 
-import org.apache.flink.util.DockerImageVersions;
+import org.apache.flink.streaming.connectors.gcp.pubsub.test.DockerImageVersions;
 import org.apache.flink.util.TestLogger;
 
 import com.google.api.gax.grpc.GrpcTransportChannel;
