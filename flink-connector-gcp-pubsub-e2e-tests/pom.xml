@@ -25,11 +25,11 @@ under the License.
 
 	<parent>
 		<groupId>org.apache.flink</groupId>
-		<artifactId>flink-end-to-end-tests</artifactId>
-		<version>1.16-SNAPSHOT</version>
+		<artifactId>flink-connector-gcp-pubsub-parent</artifactId>
+		<version>3.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>flink-connector-gcp-pubsub-emulator-tests</artifactId>
+	<artifactId>flink-connector-gcp-pubsub-e2e-tests</artifactId>
 	<name>Flink : E2E Tests : Connectors : Google PubSub</name>
 
 	<packaging>jar</packaging>
@@ -41,13 +41,13 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-streaming-java</artifactId>
-			<version>${project.version}</version>
+			<version>${flink.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-clients</artifactId>
-			<version>${project.version}</version>
+			<version>${flink.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -61,7 +61,7 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-streaming-java</artifactId>
-			<version>${project.version}</version>
+			<version>${flink.version}</version>
 			<scope>test</scope>
 			<type>test-jar</type>
 		</dependency>
@@ -69,7 +69,7 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-runtime</artifactId>
-			<version>${project.version}</version>
+			<version>${flink.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
