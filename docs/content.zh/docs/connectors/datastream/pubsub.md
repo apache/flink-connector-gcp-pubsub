@@ -28,7 +28,7 @@ under the License.
 
 这个连接器可向 [Google Cloud PubSub](https://cloud.google.com/pubsub) 读取与写入数据。添加下面的依赖来使用此连接器:
 
-{{< connector_artifact flink-connector-pubsub 3.0.0 >}}
+{{< connector_artifact flink-connector-gcp-pubsub 3.0.0 >}}
 
 <p style="border-radius: 5px; padding: 5px" class="bg-danger">
 <b>注意</b>：此连接器最近才加到 Flink 里，还未接受广泛测试。
