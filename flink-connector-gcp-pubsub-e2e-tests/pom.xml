@@ -89,6 +89,14 @@ under the License.
 
 	<build>
 		<plugins>
+			<!-- Don't publish the E2E tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
 			<!-- Disabling convergence check because there are multiple problems within the used pubsub dependencies -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
