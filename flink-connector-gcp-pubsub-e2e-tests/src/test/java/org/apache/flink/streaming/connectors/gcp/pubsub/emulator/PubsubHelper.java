@@ -94,7 +94,7 @@ public class PubsubHelper {
         LOG.info("DeleteTopic {} first delete old subscriptions.", topicName);
         adminClient
                 .listTopicSubscriptions(topicName)
-                .iterateAllAsProjectSubscriptionName()
+                .iterateAll()
                 .forEach(subscriptionAdminClient::deleteSubscription);
         LOG.info("DeleteTopic {}", topicName);
         adminClient.deleteTopic(topicName);
