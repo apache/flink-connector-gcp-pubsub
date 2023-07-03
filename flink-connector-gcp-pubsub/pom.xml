@@ -34,9 +34,9 @@ under the License.
 
 	<packaging>jar</packaging>
 
-	<properties>
-		<google-cloud-libraries-bom.version>8.1.0</google-cloud-libraries-bom.version>
-	</properties>
+<!--	<properties>-->
+<!--		<google-cloud-libraries-bom.version>8.1.0</google-cloud-libraries-bom.version>-->
+<!--	</properties>-->
 
 	<dependencyManagement>
 		<dependencies>
