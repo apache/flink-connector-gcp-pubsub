@@ -33,11 +33,6 @@ under the License.
 	<name>Flink : Connectors : Google PubSub</name>
 
 	<packaging>jar</packaging>
-
-<!--	<properties>-->
-<!--		<google-cloud-libraries-bom.version>8.1.0</google-cloud-libraries-bom.version>-->
-<!--	</properties>-->
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
