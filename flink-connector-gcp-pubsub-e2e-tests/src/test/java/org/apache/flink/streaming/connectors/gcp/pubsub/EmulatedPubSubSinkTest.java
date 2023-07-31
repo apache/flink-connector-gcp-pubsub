@@ -19,7 +19,6 @@ package org.apache.flink.streaming.connectors.gcp.pubsub;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -80,7 +79,8 @@ public class EmulatedPubSubSinkTest extends GCloudUnitTestBase {
         // Sink into pubsub
         theData.addSink(
                         PubSubSink.newBuilder()
-                                .withSerializationSchema(new SimpleStringSchema())
+                                .withSerializationSchema(
+                                        new PubSubSinkSerializationTestStringSchema())
                                 .withProjectName(PROJECT_NAME)
                                 .withTopicName(TOPIC_NAME)
                                 // Specific for emulator
@@ -121,7 +121,8 @@ public class EmulatedPubSubSinkTest extends GCloudUnitTestBase {
                 .map((MapFunction<String, String>) StringUtils::reverse)
                 .addSink(
                         PubSubSink.newBuilder()
-                                .withSerializationSchema(new SimpleStringSchema())
+                                .withSerializationSchema(
+                                        new PubSubSinkSerializationTestStringSchema())
                                 .withProjectName(PROJECT_NAME)
                                 .withTopicName(TOPIC_NAME)
                                 // Specific for emulator

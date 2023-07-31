@@ -19,7 +19,6 @@ package org.apache.flink.streaming.connectors.gcp.pubsub;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.EmulatorCredentials;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.GCloudUnitTestBase;
@@ -183,7 +182,8 @@ public class EmulatedFullTopologyTest extends GCloudUnitTestBase {
                 // And write them back to pubsub.
                 .addSink(
                         PubSubSink.newBuilder()
-                                .withSerializationSchema(new SimpleStringSchema())
+                                .withSerializationSchema(
+                                        new PubSubSinkSerializationTestStringSchema())
 
                                 // First we set the exact same settings as we would normally use.
                                 .withProjectName(PROJECT_NAME)

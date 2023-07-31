@@ -18,13 +18,13 @@
 package org.apache.flink.streaming.connectors.gcp.pubsub;
 
 import org.apache.flink.api.common.serialization.RuntimeContextInitializationContextAdapters;
-import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.connectors.gcp.pubsub.common.PubSubSerializationSchema;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.EmulatorCredentials;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.EmulatorCredentialsProvider;
 import org.apache.flink.util.Preconditions;
@@ -69,7 +69,7 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
     private final ApiFutureCallback<String> failureHandler;
     private final AtomicInteger numPendingFutures;
     private final Credentials credentials;
-    private final SerializationSchema<IN> serializationSchema;
+    private final PubSubSerializationSchema<IN> serializationSchema;
     private final String projectName;
     private final String topicName;
     private final String hostAndPortForEmulator;
@@ -79,7 +79,7 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
 
     private PubSubSink(
             Credentials credentials,
-            SerializationSchema<IN> serializationSchema,
+            PubSubSerializationSchema<IN> serializationSchema,
             String projectName,
             String topicName,
             String hostAndPortForEmulator) {
@@ -181,6 +181,7 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
     public void invoke(IN message, SinkFunction.Context context) {
         PubsubMessage pubsubMessage =
                 PubsubMessage.newBuilder()
+                        .putAllAttributes(serializationSchema.getAttributesMap())
                         .setData(ByteString.copyFrom(serializationSchema.serialize(message)))
                         .build();
 
@@ -240,14 +241,14 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
      */
     public static class PubSubSinkBuilder<IN>
             implements ProjectNameBuilder<IN>, TopicNameBuilder<IN> {
-        private SerializationSchema<IN> serializationSchema;
+        private PubSubSerializationSchema<IN> serializationSchema;
         private String projectName;
         private String topicName;
 
         private Credentials credentials;
         private String hostAndPort;
 
-        private PubSubSinkBuilder(SerializationSchema<IN> serializationSchema) {
+        private PubSubSinkBuilder(PubSubSerializationSchema<IN> serializationSchema) {
             this.serializationSchema = serializationSchema;
         }
 
@@ -318,8 +319,8 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
          * PubSubMessages.
          */
         public <IN> ProjectNameBuilder<IN> withSerializationSchema(
-                SerializationSchema<IN> deserializationSchema) {
-            return new PubSubSinkBuilder<>(deserializationSchema);
+                PubSubSerializationSchema<IN> serializationSchema) {
+            return new PubSubSinkBuilder<>(serializationSchema);
         }
     }
 
