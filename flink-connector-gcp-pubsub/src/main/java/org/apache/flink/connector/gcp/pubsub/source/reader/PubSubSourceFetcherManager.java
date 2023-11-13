@@ -31,6 +31,7 @@ import org.apache.flink.connector.gcp.pubsub.source.split.PubSubSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 /**
@@ -109,7 +110,7 @@ class PubSubSourceFetcherManager<T>
         splitFetcher.enqueueTask(
                 new SplitFetcherTask() {
                     @Override
-                    public boolean run() {
+                    public boolean run() throws IOException {
                         pubSubSplitReader.acknowledgeMessages(checkpointId);
                         return true;
                     }

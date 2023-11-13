@@ -37,10 +37,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Collectors;
 
 /**
  * A {@link SplitReader} to read from a given {@link PubSubSubscriber}.
@@ -49,16 +51,21 @@ import java.util.TreeMap;
  */
 public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSubSplit> {
     private static final Logger LOG = LoggerFactory.getLogger(PubSubSplitReader.class);
-    private static final long UPCOMING_CHECKPOINT = 0;
+    private static final int RECEIVED_MESSAGE_QUEUE_MAX_RETRY_COUNT = 5;
+    private static final int RECEIVED_MESSAGE_QUEUE_CAPACITY = 500000;
+    private static final long RECEIVED_MESSAGE_QUEUE_RETRY_SLEEP_MILLIS = 1000;
     private final PubSubDeserializationSchema<T> deserializationSchema;
     private final PubSubSubscriberFactory pubSubSubscriberFactory;
     private final Credentials credentials;
-    private PubSubSubscriber subscriber;
+    private volatile PubSubSubscriber subscriber;
     private final PubSubCollector collector;
-    // Store the IDs of GCP Pub/Sub messages that yet have to be acknowledged so that they are not
-    // resent. Must be synchronized because it's accessed both by the fetcher and the reader thread.
-    private final SortedMap<Long, List<String>> messageIdsToAcknowledge =
-            Collections.synchronizedSortedMap(new TreeMap<>());
+
+    // Store the IDs of GCP Pub/Sub messages we have fetched & processed. Since the reader thread
+    // processes messages and the fetcher thread acknowledges them, the thread-safe queue
+    // decouples them.
+    private final BlockingQueue<String> ackIdsQueue = new ArrayBlockingQueue<>(RECEIVED_MESSAGE_QUEUE_CAPACITY);
+    private final Map<Long, List<String>> messageIdsToAcknowledge = new HashMap<>();
+
 
     /**
      * @param deserializationSchema a deserialization schema to apply to incoming message payloads.
@@ -74,15 +81,17 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
         this.pubSubSubscriberFactory = pubSubSubscriberFactory;
         this.credentials = credentials;
         this.collector = new PubSubCollector();
-
-        this.messageIdsToAcknowledge.put(UPCOMING_CHECKPOINT, new ArrayList<>());
     }
 
     @Override
     public RecordsWithSplitIds<Tuple2<T, Long>> fetch() throws IOException {
         RecordsBySplits.Builder<Tuple2<T, Long>> recordsBySplits = new RecordsBySplits.Builder<>();
         if (subscriber == null) {
-            subscriber = pubSubSubscriberFactory.getSubscriber(credentials);
+            synchronized (this) {
+                if (subscriber == null) {
+                    subscriber = pubSubSubscriberFactory.getSubscriber(credentials);
+                }
+            }
         }
 
         for (ReceivedMessage receivedMessage : subscriber.pull()) {
@@ -113,10 +122,37 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
                 collector.reset();
             }
 
-            messageIdsToAcknowledge.get(UPCOMING_CHECKPOINT).add(receivedMessage.getAckId());
+            enqueueAcknowledgementId(receivedMessage.getAckId());
         }
 
         return recordsBySplits.build();
+    }
+
+
+    /**
+     * Enqueue an acknowledgment ID to be acknowledged towards GCP Pub/Sub with retries.
+     * @param ackId the ID of the message to acknowledge
+     */
+    public void enqueueAcknowledgementId(String ackId) {
+        int retryCount = 0;
+
+        while (retryCount < RECEIVED_MESSAGE_QUEUE_MAX_RETRY_COUNT) {
+            boolean enqueued = ackIdsQueue.offer(ackId);
+            if (!enqueued) {
+                retryCount++;
+                try {
+                    Thread.sleep(RECEIVED_MESSAGE_QUEUE_RETRY_SLEEP_MILLIS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOG.error("Thread interrupted while waiting to enqueue acknowledgment ID.", e);
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+
+        LOG.warn("Queue is full. Unable to enqueue acknowledgment ID after " + RECEIVED_MESSAGE_QUEUE_MAX_RETRY_COUNT + " retries.");
     }
 
     @Override
@@ -152,34 +188,70 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
         }
     }
 
-    //    ------------------------------------------------------
 
-    void prepareForAcknowledgement(long checkpointId) {
-        synchronized (messageIdsToAcknowledge) {
-            messageIdsToAcknowledge.put(
-                    checkpointId, messageIdsToAcknowledge.remove(UPCOMING_CHECKPOINT));
-            messageIdsToAcknowledge.put(UPCOMING_CHECKPOINT, new ArrayList<>());
-        }
+    /**
+     * Prepare for acknowledging messages received since the last checkpoint by draining the
+     * {@link #ackIdsQueue} into {@link #messageIdsToAcknowledge}.
+     *
+     * <p>Calling this method is enqueued by the {@link PubSubSourceFetcherManager} to snapshot
+     * state before a checkpoint.
+     *
+     * @param checkpointId the ID of the checkpoint for which to prepare for acknowledging messages
+     */
+    public void prepareForAcknowledgement(long checkpointId) {
+        List<String> ackIds = new ArrayList<>();
+        ackIdsQueue.drainTo(ackIds);
+        messageIdsToAcknowledge.put(checkpointId, ackIds);
     }
 
     /**
-     * Acknowledge the reception of messages towards GCP Pub/Sub since the last checkpoint. As long
-     * as a received message has not been acknowledged, GCP Pub/Sub will attempt to deliver it
+     * Acknowledge the reception of messages towards GCP Pub/Sub since the last checkpoint. If a received message
+     * is not acknowledged before the subscription's acknowledgment timeout, GCP Pub/Sub will attempt to deliver it
      * again.
      *
-     * <p>Calling this message is enqueued by the {@link PubSubSourceFetcherManager} on checkpoint.
+     * <p>Calling this method is enqueued by the {@link PubSubSourceFetcherManager} on checkpoint.
+     *
+     * @param checkpointId the ID of the checkpoint for which to acknowledge messages
      */
-    void acknowledgeMessages(long checkpointId) {
-        synchronized (messageIdsToAcknowledge) {
-            List<String> messageIdsForCheckpoint = messageIdsToAcknowledge.get(checkpointId);
-            if (!messageIdsForCheckpoint.isEmpty() && subscriber != null) {
-                LOG.info(
-                        "Acknowledging messages for checkpoint {} with IDs {}",
-                        checkpointId,
-                        messageIdsForCheckpoint);
-                subscriber.acknowledge(messageIdsForCheckpoint);
+    void acknowledgeMessages(long checkpointId) throws IOException {
+        if (subscriber == null) {
+            synchronized (this) {
+                if (subscriber == null) {
+                    subscriber = pubSubSubscriberFactory.getSubscriber(credentials);
+                }
             }
-            messageIdsToAcknowledge.remove(checkpointId);
+        }
+
+        if (!messageIdsToAcknowledge.containsKey(checkpointId)) {
+            LOG.error(
+                    "Checkpoint {} not found in set of in-flight checkpoints {}.",
+                    checkpointId,
+                    messageIdsToAcknowledge.keySet().stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(",")));
+            return;
+        }
+
+        List<String> messageIdsForCheckpoint = messageIdsToAcknowledge.remove(checkpointId);
+        if (!messageIdsForCheckpoint.isEmpty()) {
+            LOG.debug(
+                    "Acknowledging {} messages for checkpoint {}.",
+                    messageIdsForCheckpoint.size(),
+                    checkpointId);
+            subscriber.acknowledge(messageIdsForCheckpoint);
+        } else {
+            LOG.debug("No messages to acknowledge for checkpoint {}.", checkpointId);
+        }
+
+        // Handle the case where a checkpoint is aborted and the messages for that checkpoint are
+        // never acknowledged. Here, we log any remaining checkpointIds and clear them. This relies
+        // on GCP Pub/Sub to redeliver the unacked messages.
+        if (!messageIdsToAcknowledge.isEmpty()) {
+            // Loop through any remaining checkpointIds in messageIdsToAcknowledge, and then clear them.
+            for (Map.Entry<Long, List<String>> entry : messageIdsToAcknowledge.entrySet()) {
+                LOG.warn("Checkpoint {} was not acknowledged - clearing {} unacked messages.", entry.getKey(), entry.getValue().size());
+            }
+            messageIdsToAcknowledge.clear();
         }
     }
 }
