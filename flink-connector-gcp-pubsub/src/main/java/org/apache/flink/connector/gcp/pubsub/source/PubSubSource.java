@@ -64,7 +64,7 @@ import static com.google.cloud.pubsub.v1.SubscriptionAdminSettings.defaultCreden
  * PubSubSourceReader} that joins. The split does not contain any split-specific information because
  * Pub/Sub does not allow subscribers to specify a "range" of messages to pull by providing
  * partitions or offsets. However, Pub/Sub will automatically load-balance messages between multiple
- * readers which use the same subscription.
+ * readers using same subscription.
  *
  * <p>A {@link PubSubSource} can be constructed through the {@link PubSubSourceBuilder} like so:
  *
@@ -229,8 +229,8 @@ public class PubSubSource<OUT>
         }
 
         /**
-         * @param credentials an instance of {@com.google.auth.Credentials} to authenticate against
-         *     Google Cloud
+         * @param credentials an instance of {@link com.google.auth.Credentials} to authenticate
+         *     against Google Cloud
          */
         public PubSubSourceBuilder<OUT> setCredentials(Credentials credentials) {
             this.credentials = credentials;
@@ -245,7 +245,7 @@ public class PubSubSource<OUT>
         }
 
         /**
-         * Create a parameterized {@DefaultPubSubSubscriberFactory} and set it on the builder.
+         * Create a parameterized {@link DefaultPubSubSubscriberFactory} and set it on the builder.
          *
          * @param maxMessagesPerPull The maximum number of messages that should be pulled in one go.
          * @param perRequestTimeout The timeout per request from the subscriber
@@ -289,7 +289,7 @@ public class PubSubSource<OUT>
                                 DEFAULT_PUBSUB_SUBSCRIBER_MAX_MESSAGES_PER_PULL);
             }
 
-            return new PubSubSource(
+            return new PubSubSource<>(
                     deserializationSchema, pubSubSubscriberFactory, props, credentials);
         }
     }

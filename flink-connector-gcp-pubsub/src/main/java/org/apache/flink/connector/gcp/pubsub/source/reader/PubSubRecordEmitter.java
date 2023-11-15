@@ -34,8 +34,7 @@ public class PubSubRecordEmitter<T> implements RecordEmitter<Tuple2<T, Long>, T,
 
     @Override
     public void emitRecord(
-            Tuple2<T, Long> element, SourceOutput<T> output, PubSubSplitState splitState)
-            throws Exception {
+            Tuple2<T, Long> element, SourceOutput<T> output, PubSubSplitState splitState) {
         output.collect(element.f0, element.f1);
     }
 }

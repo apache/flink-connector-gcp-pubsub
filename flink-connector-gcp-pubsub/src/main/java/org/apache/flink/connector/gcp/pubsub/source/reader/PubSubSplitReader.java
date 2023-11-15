@@ -73,7 +73,7 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
      * @param credentials the credentials to use for creating a new subscriber
      */
     public PubSubSplitReader(
-            PubSubDeserializationSchema deserializationSchema,
+            PubSubDeserializationSchema<T> deserializationSchema,
             PubSubSubscriberFactory pubSubSubscriberFactory,
             Credentials credentials) {
 

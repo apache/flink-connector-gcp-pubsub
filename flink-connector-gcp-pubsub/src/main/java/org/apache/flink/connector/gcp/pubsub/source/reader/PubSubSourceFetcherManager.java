@@ -20,6 +20,7 @@
 package org.apache.flink.connector.gcp.pubsub.source.reader;
 
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.fetcher.SingleThreadFetcherManager;
 import org.apache.flink.connector.base.source.reader.fetcher.SplitFetcher;
@@ -45,8 +46,9 @@ class PubSubSourceFetcherManager<T>
 
     PubSubSourceFetcherManager(
             FutureCompletingBlockingQueue<RecordsWithSplitIds<Tuple2<T, Long>>> elementsQueue,
-            Supplier<SplitReader<Tuple2<T, Long>, PubSubSplit>> splitReaderSupplier) {
-        super(elementsQueue, splitReaderSupplier);
+            Supplier<SplitReader<Tuple2<T, Long>, PubSubSplit>> splitReaderSupplier,
+            Configuration config) {
+        super(elementsQueue, splitReaderSupplier, config);
     }
 
     void prepareForAcknowledgement(long checkpointId) {

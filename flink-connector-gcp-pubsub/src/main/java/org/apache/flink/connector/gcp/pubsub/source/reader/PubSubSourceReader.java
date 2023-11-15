@@ -32,7 +32,7 @@ import org.apache.flink.connector.gcp.pubsub.source.split.PubSubSplitState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -51,7 +51,7 @@ public class PubSubSourceReader<T>
             SourceReaderContext context) {
         super(
                 elementsQueue,
-                new PubSubSourceFetcherManager<>(elementsQueue, splitReaderSupplier::get),
+                new PubSubSourceFetcherManager<>(elementsQueue, splitReaderSupplier::get, config),
                 recordEmitter,
                 config,
                 context);
@@ -64,7 +64,7 @@ public class PubSubSourceReader<T>
     public List<PubSubSplit> snapshotState(long checkpointId) {
         ((PubSubSourceFetcherManager<T>) splitFetcherManager)
                 .prepareForAcknowledgement(checkpointId);
-        return Arrays.asList(new PubSubSplit());
+        return Collections.singletonList(new PubSubSplit());
     }
 
     /**
@@ -73,10 +73,9 @@ public class PubSubSourceReader<T>
      * PubSubSplitReader}.
      *
      * @param checkpointId the checkpoint ID.
-     * @throws Exception
      */
     @Override
-    public void notifyCheckpointComplete(long checkpointId) throws Exception {
+    public void notifyCheckpointComplete(long checkpointId) {
         LOG.info("Acknowledging received GCP Pub/Sub messages for checkpoint {}", checkpointId);
         ((PubSubSourceFetcherManager<T>) splitFetcherManager).acknowledgeMessages(checkpointId);
     }
