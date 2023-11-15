@@ -63,9 +63,9 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
     // Store the IDs of GCP Pub/Sub messages we have fetched & processed. Since the reader thread
     // processes messages and the fetcher thread acknowledges them, the thread-safe queue
     // decouples them.
-    private final BlockingQueue<String> ackIdsQueue = new ArrayBlockingQueue<>(RECEIVED_MESSAGE_QUEUE_CAPACITY);
+    private final BlockingQueue<String> ackIdsQueue =
+            new ArrayBlockingQueue<>(RECEIVED_MESSAGE_QUEUE_CAPACITY);
     private final Map<Long, List<String>> messageIdsToAcknowledge = new HashMap<>();
-
 
     /**
      * @param deserializationSchema a deserialization schema to apply to incoming message payloads.
@@ -128,9 +128,9 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
         return recordsBySplits.build();
     }
 
-
     /**
      * Enqueue an acknowledgment ID to be acknowledged towards GCP Pub/Sub with retries.
+     *
      * @param ackId the ID of the message to acknowledge
      */
     public void enqueueAcknowledgementId(String ackId) {
@@ -152,7 +152,10 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
             }
         }
 
-        LOG.warn("Queue is full. Unable to enqueue acknowledgment ID after " + RECEIVED_MESSAGE_QUEUE_MAX_RETRY_COUNT + " retries.");
+        LOG.warn(
+                "Queue is full. Unable to enqueue acknowledgment ID after "
+                        + RECEIVED_MESSAGE_QUEUE_MAX_RETRY_COUNT
+                        + " retries.");
     }
 
     @Override
@@ -188,10 +191,9 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
         }
     }
 
-
     /**
-     * Prepare for acknowledging messages received since the last checkpoint by draining the
-     * {@link #ackIdsQueue} into {@link #messageIdsToAcknowledge}.
+     * Prepare for acknowledging messages received since the last checkpoint by draining the {@link
+     * #ackIdsQueue} into {@link #messageIdsToAcknowledge}.
      *
      * <p>Calling this method is enqueued by the {@link PubSubSourceFetcherManager} to snapshot
      * state before a checkpoint.
@@ -205,9 +207,9 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
     }
 
     /**
-     * Acknowledge the reception of messages towards GCP Pub/Sub since the last checkpoint. If a received message
-     * is not acknowledged before the subscription's acknowledgment timeout, GCP Pub/Sub will attempt to deliver it
-     * again.
+     * Acknowledge the reception of messages towards GCP Pub/Sub since the last checkpoint. If a
+     * received message is not acknowledged before the subscription's acknowledgment timeout, GCP
+     * Pub/Sub will attempt to deliver it again.
      *
      * <p>Calling this method is enqueued by the {@link PubSubSourceFetcherManager} on checkpoint.
      *
@@ -247,9 +249,13 @@ public class PubSubSplitReader<T> implements SplitReader<Tuple2<T, Long>, PubSub
         // never acknowledged. Here, we log any remaining checkpointIds and clear them. This relies
         // on GCP Pub/Sub to redeliver the unacked messages.
         if (!messageIdsToAcknowledge.isEmpty()) {
-            // Loop through any remaining checkpointIds in messageIdsToAcknowledge, and then clear them.
+            // Loop through any remaining checkpointIds in messageIdsToAcknowledge, and then clear
+            // them.
             for (Map.Entry<Long, List<String>> entry : messageIdsToAcknowledge.entrySet()) {
-                LOG.warn("Checkpoint {} was not acknowledged - clearing {} unacked messages.", entry.getKey(), entry.getValue().size());
+                LOG.warn(
+                        "Checkpoint {} was not acknowledged - clearing {} unacked messages.",
+                        entry.getKey(),
+                        entry.getValue().size());
             }
             messageIdsToAcknowledge.clear();
         }

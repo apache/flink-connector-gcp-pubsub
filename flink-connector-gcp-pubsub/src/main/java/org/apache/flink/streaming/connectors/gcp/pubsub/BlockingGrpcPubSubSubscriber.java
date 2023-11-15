@@ -82,43 +82,45 @@ public class BlockingGrpcPubSubSubscriber implements PubSubSubscriber {
 
     @Override
     public void acknowledge(List<String> acknowledgementIds) {
-		List<List<String>> splittedAckIds = splitAckIds(acknowledgementIds);
-		while (!splittedAckIds.isEmpty()) {
-			AcknowledgeRequest acknowledgeRequest =
-					AcknowledgeRequest.newBuilder()
-									.setSubscription(projectSubscriptionName)
-									.addAllAckIds(splittedAckIds.remove(0))
-									.build();
+        List<List<String>> splittedAckIds = splitAckIds(acknowledgementIds);
+        while (!splittedAckIds.isEmpty()) {
+            AcknowledgeRequest acknowledgeRequest =
+                    AcknowledgeRequest.newBuilder()
+                            .setSubscription(projectSubscriptionName)
+                            .addAllAckIds(splittedAckIds.remove(0))
+                            .build();
 
-			acknowledgeWithRetries(acknowledgeRequest, retries);
-		}
-	}
+            acknowledgeWithRetries(acknowledgeRequest, retries);
+        }
+    }
 
-	private void acknowledgeWithRetries(AcknowledgeRequest acknowledgeRequest, int retriesRemaining) {
-		try {
-			stub.withDeadlineAfter(timeout.toMillis(), TimeUnit.MILLISECONDS).acknowledge(acknowledgeRequest);
-		} catch (StatusRuntimeException e) {
-			if (retriesRemaining > 0) {
-				acknowledgeWithRetries(acknowledgeRequest, retriesRemaining - 1);
-				return;
-			}
+    private void acknowledgeWithRetries(
+            AcknowledgeRequest acknowledgeRequest, int retriesRemaining) {
+        try {
+            stub.withDeadlineAfter(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                    .acknowledge(acknowledgeRequest);
+        } catch (StatusRuntimeException e) {
+            if (retriesRemaining > 0) {
+                acknowledgeWithRetries(acknowledgeRequest, retriesRemaining - 1);
+                return;
+            }
 
-			throw e;
-		}
-	}
+            throw e;
+        }
+    }
 
     /* maxPayload is the maximum number of bytes to devote to actual ids in
-     * acknowledgement or modifyAckDeadline requests. A serialized
-     * AcknowledgeRequest grpc call has a small constant overhead, plus the size of the
-     * subscription name, plus 3 bytes per ID (a tag byte and two size bytes). A
-     * ModifyAckDeadlineRequest has an additional few bytes for the deadline. We
-     * don't know the subscription name here, so we just assume the size exclusive
-     * of ids is 100 bytes.
+    * acknowledgement or modifyAckDeadline requests. A serialized
+    * AcknowledgeRequest grpc call has a small constant overhead, plus the size of the
+    * subscription name, plus 3 bytes per ID (a tag byte and two size bytes). A
+    * ModifyAckDeadlineRequest has an additional few bytes for the deadline. We
+    * don't know the subscription name here, so we just assume the size exclusive
+    * of ids is 100 bytes.
 
-     * With gRPC there is no way for the client to know the server's max message size (it is
-     * configurable on the server). We know from experience that it is 512K.
-     * @return First list contains no more than 512k bytes, second list contains remaining ids
-     */
+    * With gRPC there is no way for the client to know the server's max message size (it is
+    * configurable on the server). We know from experience that it is 512K.
+    * @return First list contains no more than 512k bytes, second list contains remaining ids
+    */
     private List<List<String>> splitAckIds(List<String> ackIds) {
         int queueSize = ackIds.size();
         final int maxPayload = 500 * 1024; // slightly below 512k bytes to be on the safe side
