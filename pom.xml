@@ -50,19 +50,19 @@ under the License.
 
 	<properties>
 		<flink.version>1.17.0</flink.version>
-		<google-cloud-libraries-bom.version>26.1.0</google-cloud-libraries-bom.version>
+		<google-cloud-libraries-bom.version>26.37.0</google-cloud-libraries-bom.version>
 
-		<junit5.version>5.9.1</junit5.version>
-		<assertj.version>3.23.1</assertj.version>
-		<testcontainers.version>1.17.2</testcontainers.version>
-		<mockito.version>3.4.6</mockito.version>
-		<hamcrest.version>1.3</hamcrest.version>
+		<junit5.version>5.10.2</junit5.version>
+		<assertj.version>3.25.3</assertj.version>
+		<testcontainers.version>1.19.7</testcontainers.version>
+		<mockito.version>3.12.4</mockito.version>
+		<hamcrest.version>2.2</hamcrest.version>
 
 		<japicmp.skip>false</japicmp.skip>
 		<japicmp.referenceVersion>3.0.0-1.16.0</japicmp.referenceVersion>
 
 		<slf4j.version>1.7.36</slf4j.version>
-		<log4j.version>2.17.2</log4j.version>
+		<log4j.version>2.23.1</log4j.version>
 
 		<flink.parent.artifactId>flink-connector-gcp-pubsub-parent</flink.parent.artifactId>
 	</properties>
@@ -161,9 +161,8 @@ under the License.
 
 		<dependency>
 			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-all</artifactId>
+			<artifactId>hamcrest</artifactId>
 			<version>${hamcrest.version}</version>
-			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
 
@@ -256,7 +255,35 @@ under the License.
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>3.5</version>
+				<version>3.14.0</version>
+			</dependency>
+
+			<!-- For dependency convergence -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.26.1</version>
+			</dependency>
+
+			<!-- For dependency convergence -->
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>2.15.1</version>
+			</dependency>
+
+			<!-- For dependency convergence -->
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj.version}</version>
+			</dependency>
+
+			<!-- Test dependencies -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${junit5.version}</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
@@ -270,14 +297,14 @@ under the License.
 			<dependency>
 				<groupId>com.google.errorprone</groupId>
 				<artifactId>error_prone_annotations</artifactId>
-				<version>2.4.0</version>
+				<version>2.26.1</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>net.bytebuddy</groupId>
 				<artifactId>byte-buddy</artifactId>
-				<version>1.12.10</version>
+				<version>1.14.13</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
@@ -298,14 +325,14 @@ under the License.
 			<dependency>
 				<groupId>org.junit.platform</groupId>
 				<artifactId>junit-platform-engine</artifactId>
-				<version>1.9.1</version>
+				<version>1.10.2</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>org.junit.platform</groupId>
 				<artifactId>junit-platform-commons</artifactId>
-				<version>1.9.1</version>
+				<version>1.10.2</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
