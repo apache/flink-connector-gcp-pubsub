@@ -49,7 +49,7 @@ under the License.
 	</modules>
 
 	<properties>
-		<flink.version>1.17.0</flink.version>
+		<flink.version>1.18.0</flink.version>
 		<google-cloud-libraries-bom.version>26.37.0</google-cloud-libraries-bom.version>
 
 		<junit5.version>5.10.2</junit5.version>
