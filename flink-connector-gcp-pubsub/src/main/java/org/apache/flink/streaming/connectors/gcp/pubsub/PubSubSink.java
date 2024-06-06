@@ -62,6 +62,7 @@ import static org.apache.flink.util.concurrent.Executors.directExecutor;
  *
  * @param <IN> type of PubSubSink messages to write
  */
+@Deprecated
 public class PubSubSink<IN> extends RichSinkFunction<IN> implements CheckpointedFunction {
     private static final Logger LOG = LoggerFactory.getLogger(PubSubSink.class);
 
