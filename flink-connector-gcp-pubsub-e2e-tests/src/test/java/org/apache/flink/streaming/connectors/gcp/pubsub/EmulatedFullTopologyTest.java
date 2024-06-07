@@ -20,11 +20,11 @@ package org.apache.flink.streaming.connectors.gcp.pubsub;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.gcp.pubsub.sink.util.PubsubHelper;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.EmulatorCredentials;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.GCloudUnitTestBase;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.PubSubSubscriberFactoryForEmulator;
-import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.PubsubHelper;
 
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;

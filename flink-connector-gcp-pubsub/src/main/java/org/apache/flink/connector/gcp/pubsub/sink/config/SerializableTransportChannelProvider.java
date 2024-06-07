@@ -12,6 +12,7 @@ import java.io.Serializable;
  */
 @PublicEvolving
 public abstract class SerializableTransportChannelProvider implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     protected transient TransportChannelProvider transportChannelProvider;
 
