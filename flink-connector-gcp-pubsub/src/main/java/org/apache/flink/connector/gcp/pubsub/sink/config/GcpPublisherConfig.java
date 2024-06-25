@@ -13,6 +13,7 @@ import java.io.Serializable;
 /** Configuration keys for {@link com.google.cloud.pubsub.v1.Publisher}. */
 @PublicEvolving
 public class GcpPublisherConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private final RetrySettings retrySettings;
 

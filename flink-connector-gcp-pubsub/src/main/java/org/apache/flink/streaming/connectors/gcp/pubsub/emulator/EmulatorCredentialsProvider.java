@@ -20,12 +20,16 @@ package org.apache.flink.streaming.connectors.gcp.pubsub.emulator;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.auth.Credentials;
 
+import java.io.Serializable;
+
 /**
  * A CredentialsProvider that simply provides the right credentials that are to be used for
  * connecting to an emulator. NOTE: The Google provided NoCredentials and NoCredentialsProvider do
  * not behave as expected. See https://github.com/googleapis/gax-java/issues/1148
  */
-public final class EmulatorCredentialsProvider implements CredentialsProvider {
+public final class EmulatorCredentialsProvider implements CredentialsProvider, Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Override
     public Credentials getCredentials() {
         return EmulatorCredentials.getInstance();

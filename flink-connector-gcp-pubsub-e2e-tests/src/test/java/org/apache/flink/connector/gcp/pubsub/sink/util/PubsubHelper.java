@@ -15,8 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.gcp.pubsub.emulator;
+package org.apache.flink.connector.gcp.pubsub.sink.util;
 
+import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.EmulatorCredentialsProvider;
+
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.cloud.pubsub.v1.MessageReceiver;
@@ -36,11 +40,15 @@ import com.google.pubsub.v1.PushConfig;
 import com.google.pubsub.v1.ReceivedMessage;
 import com.google.pubsub.v1.Topic;
 import com.google.pubsub.v1.TopicName;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** A helper class to make managing the testing topics a bit easier. */
@@ -48,13 +56,32 @@ public class PubsubHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(PubsubHelper.class);
 
+    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(5);
+
+    private ManagedChannel channel;
+
     private TransportChannelProvider channelProvider;
 
     private TopicAdminClient topicClient;
+
     private SubscriptionAdminClient subscriptionAdminClient;
+
+    public PubsubHelper(String endpoint) {
+        channel = ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build();
+        channelProvider =
+                FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+    }
 
     public PubsubHelper(TransportChannelProvider channelProvider) {
         this.channelProvider = channelProvider;
+    }
+
+    public TransportChannelProvider getChannelProvider() {
+        return channelProvider;
+    }
+
+    public ManagedChannel getChannel() {
+        return channel;
     }
 
     public TopicAdminClient getTopicAdminClient() throws IOException {
@@ -90,12 +117,6 @@ public class PubsubHelper {
             return;
         }
 
-        // If it exists we delete all subscriptions and the topic itself.
-        LOG.info("DeleteTopic {} first delete old subscriptions.", topicName);
-        adminClient
-                .listTopicSubscriptions(topicName)
-                .iterateAll()
-                .forEach(subscriptionAdminClient::deleteSubscription);
         LOG.info("DeleteTopic {}", topicName);
         adminClient.deleteTopic(topicName);
     }
@@ -221,5 +242,35 @@ public class PubsubHelper {
                 .setChannelProvider(channelProvider)
                 .setCredentialsProvider(EmulatorCredentialsProvider.create())
                 .build();
+    }
+
+    public void close() {
+        if (topicClient != null) {
+            try {
+                topicClient.shutdown();
+                topicClient.awaitTermination(SHUTDOWN_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOG.warn("Error shutting down topic client", e);
+            }
+        }
+
+        if (subscriptionAdminClient != null) {
+            try {
+                subscriptionAdminClient.shutdown();
+                subscriptionAdminClient.awaitTermination(
+                        SHUTDOWN_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOG.warn("Error shutting down subscription admin client", e);
+            }
+        }
+
+        if (channel != null) {
+            try {
+                channel.shutdown();
+                channel.awaitTermination(SHUTDOWN_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOG.warn("Error shutting down channel", e);
+            }
+        }
     }
 }

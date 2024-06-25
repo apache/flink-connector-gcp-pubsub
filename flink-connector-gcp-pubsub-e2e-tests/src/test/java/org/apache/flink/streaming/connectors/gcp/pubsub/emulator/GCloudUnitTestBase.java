@@ -17,6 +17,7 @@
 
 package org.apache.flink.streaming.connectors.gcp.pubsub.emulator;
 
+import org.apache.flink.connector.gcp.pubsub.sink.util.PubsubHelper;
 import org.apache.flink.streaming.connectors.gcp.pubsub.test.DockerImageVersions;
 import org.apache.flink.util.TestLogger;
 
