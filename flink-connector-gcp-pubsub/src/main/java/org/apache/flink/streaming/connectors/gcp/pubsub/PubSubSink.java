@@ -332,7 +332,7 @@ public class PubSubSink<IN> extends RichSinkFunction<IN> implements Checkpointed
 
     /** Part of {@link PubSubSinkBuilder} to set required fields. */
     public interface TopicNameBuilder<IN> {
-        /** Set the subscription name of the subscription to pull messages from. */
+        /** Set the name of the topic where the messages will be published. */
         PubSubSinkBuilder<IN> withTopicName(String topicName);
     }
 
