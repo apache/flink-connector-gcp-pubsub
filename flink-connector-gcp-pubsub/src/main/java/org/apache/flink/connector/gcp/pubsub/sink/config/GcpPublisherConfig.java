@@ -9,6 +9,7 @@ import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.gax.rpc.TransportChannelProvider;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /** Configuration keys for {@link com.google.cloud.pubsub.v1.Publisher}. */
 @PublicEvolving
@@ -56,6 +57,50 @@ public class GcpPublisherConfig implements Serializable {
             return null;
         }
         return transportChannelProvider.getTransportChannelProvider();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GcpPublisherConfig that = (GcpPublisherConfig) o;
+
+        return Objects.equals(retrySettings, that.retrySettings)
+                && Objects.equals(batchingSettings, that.batchingSettings)
+                && Objects.equals(credentialsProvider, that.credentialsProvider)
+                && Objects.equals(transportChannelProvider, that.transportChannelProvider)
+                && Objects.equals(enableCompression, that.enableCompression);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                retrySettings,
+                batchingSettings,
+                credentialsProvider,
+                transportChannelProvider,
+                enableCompression);
+    }
+
+    @Override
+    public String toString() {
+        return "GcpPublisherConfig{"
+                + "retrySettings="
+                + retrySettings
+                + ", batchingSettings="
+                + batchingSettings
+                + ", credentialsProvider="
+                + credentialsProvider
+                + ", transportChannelProvider="
+                + transportChannelProvider
+                + ", enableCompression="
+                + enableCompression
+                + '}';
     }
 
     public Boolean getEnableCompression() {
