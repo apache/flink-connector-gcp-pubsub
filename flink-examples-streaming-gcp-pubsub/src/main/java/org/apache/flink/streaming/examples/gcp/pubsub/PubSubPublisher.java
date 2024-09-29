@@ -21,11 +21,14 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 
 /** Helper class to send PubSubMessages to a PubSub topic. */
 class PubSubPublisher {
+    private static final Logger LOG = LoggerFactory.getLogger(PubSubExample.class);
     private final String projectName;
     private final String topicName;
 
@@ -49,7 +52,7 @@ class PubSubPublisher {
                 PubsubMessage message = PubsubMessage.newBuilder().setData(messageData).build();
                 publisher.publish(message).get();
 
-                System.out.println("Published message: " + i);
+                LOG.info("Published message with payload: " + i);
                 Thread.sleep(100L);
             }
         } catch (Exception e) {
