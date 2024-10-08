@@ -17,8 +17,8 @@
 
 package org.apache.flink.streaming.connectors.gcp.pubsub;
 
+import org.apache.flink.connector.gcp.pubsub.sink.util.PubsubHelper;
 import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.GCloudUnitTestBase;
-import org.apache.flink.streaming.connectors.gcp.pubsub.emulator.PubsubHelper;
 
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;

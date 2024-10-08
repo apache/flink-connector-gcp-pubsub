@@ -96,6 +96,51 @@ SinkFunction<SomeObject> pubsubSink = PubSubSink.newBuilder()
 dataStream.addSink(pubsubSink);
 ```
 
+Note: This Sink has been deprecated in favor of the `PubSubSinkV2` which extends the new `SinkV2` API.
+
+
+### PubSubSinkV2
+
+Alternatively to the `PubSubSink` you can use the `PubSubSinkV2` which extends the new `SinkV2` API.
+You can instantiate the `PubSubSinkV2` using the builder `PubSubSinkV2Builder` as follows:
+
+```java
+PubSubSinkV2Builder<String> pubSubSink =  PubSubSinkV2Builder.<String>builder()         
+        .setProjectId("project-id")
+        .setTopicId("topic-id")
+        .setGcpPublisherConfig(gcpPublisherConfig)
+        .setSerializationSchema(new SimpleStringSchema())
+        .setMaximumInflightMessages(10)
+        .setFailOnError(true)
+        .build();
+```
+The `PubSubSinkV2` uses `com.google.cloud.pubsub.v1.Publisher` to publish messages to PubSub. 
+
+The Sink is configured using `GcpPublisherConfig` which can be created using the builder `GcpPublisherConfigBuilder` as follows:
+
+```java
+GcpPublisherConfig gcpPublisherConfig = GcpPublisherConfigBuilder.builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setBatchingSettings(BatchingSettings.newBuilder()
+                .setDelayThreshold(Duration.ofMillis(10))
+                .setElementCountThreshold(10L)
+                .build())
+        .setRetrySettings(RetrySettings.newBuilder()
+                .setInitialRpcTimeout(Duration.ofSeconds(10))
+                .setMaxRpcTimeout(Duration.ofSeconds(10))
+                .setTotalTimeout(Duration.ofSeconds(10))
+                .setInitialRetryDelay(Duration.ofSeconds(10))
+                .setMaxRetryDelay(Duration.ofSeconds(10))
+                .setRetryDelayMultiplier(1.0)
+                .setRpcTimeoutMultiplier(1.0)
+                .setMaxAttempts(10)
+                .build())
+        .setEnableCompression(true)
+        .build();
+```
+
+The `PubSubSinkV2` does not buffer messages before sending them to PubSub. Instead, it uses the `Publisher`'s batching settings to batch messages before sending them to PubSub.
+
 ### Google Credentials
 
 Google uses [Credentials](https://cloud.google.com/docs/authentication/production) to authenticate and authorize applications so that they can use Google Cloud Platform resources (such as PubSub).
