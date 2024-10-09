@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.internal.source.enumerator;
+package org.apache.flink.streaming.connectors.gcp.pubsub.v2.internal.source.enumerator;
 
 import org.apache.flink.api.connector.source.ReaderInfo;
 import org.apache.flink.api.connector.source.SplitEnumeratorContext;
 import org.apache.flink.api.connector.source.SplitsAssignment;
 import org.apache.flink.streaming.connectors.gcp.pubsub.proto.PubSubEnumeratorCheckpoint;
-import org.apache.flink.streaming.connectors.gcp.pubsub.v2.internal.source.enumerator.PubSubSplitEnumerator;
 import org.apache.flink.streaming.connectors.gcp.pubsub.v2.internal.source.split.SubscriptionSplit;
 
 import com.google.pubsub.v1.ProjectSubscriptionName;
