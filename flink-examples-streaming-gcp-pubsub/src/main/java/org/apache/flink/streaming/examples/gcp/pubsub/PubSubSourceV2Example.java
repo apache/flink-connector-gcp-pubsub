@@ -23,8 +23,6 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubDeserializationSchemaV2;
-import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubSerializationSchema;
-import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubSink;
 import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubSource;
 
 import com.google.pubsub.v1.ProjectSubscriptionName;
@@ -99,15 +97,7 @@ public class PubSubSourceV2Example {
                                 .build(),
                         WatermarkStrategy.noWatermarks(),
                         "PubSubSource");
-        stream.sinkTo(
-                        PubSubSink.<String>builder()
-                                .setSerializationSchema(
-                                        PubSubSerializationSchema.dataOnly(
-                                                new SimpleStringSchema()))
-                                .setProjectName(topicProject)
-                                .setTopicName(topicName)
-                                .build())
-                .name("PubSubSink");
+        stream.print();
 
         // Start a checkpoint every 1000 ms.
         env.enableCheckpointing(1000);
