@@ -26,45 +26,25 @@ import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubDeserialization
 import org.apache.flink.streaming.connectors.gcp.pubsub.v2.PubSubSource;
 
 import com.google.pubsub.v1.ProjectSubscriptionName;
-import com.google.pubsub.v1.ProjectTopicName;
 
 /**
- * A simple example PubSub Flink job.
+ * A simple example PubSub Flink job using the v2 source.
  *
- * <p>This job pulls messages from a PubSub subscription as a data source and publishes these
- * messages to a PubSub topic as a sink.
+ * <p>This job pulls messages from a PubSub subscription as a data source and prints the message.
  *
  * <p>Example usage (source subscription and sink topic must be in the same GCP project): $ flink
  * run PubSubSourceV2Example.jar --project PROJECT-NAME --source-subscription SUBSCRIPTION-NAME
- * --sink-topic TOPIC-NAME
  *
- * <p>Example usage (source subscription and sink topic can be in different GCP projects): $ flink
- * run PubSubSourceV2Example.jar --source-subscription
- * projects/PROJECT-NAME/subscriptions/SUBSCRIPTION-NAME --sink-topic
- * projects/PROJECT-NAME/topics/TOPIC-NAME
+ * <p>Example usage (project can be parsed off of the source subscription instead of specifying the
+ * project explicitly): $ flink run PubSubSourceV2Example.jar --source-subscription
+ * projects/PROJECT-NAME/subscriptions/SUBSCRIPTION-NAME
  */
 public class PubSubSourceV2Example {
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         final ParameterTool parameterTool = ParameterTool.fromArgs(args);
-        // Parse sink topic from parameters.
-        String topicName = parameterTool.get("sink-topic");
-        String topicProject = parameterTool.get("project");
-        if (topicName == null) {
-            System.out.println("Failed to start! The parameter --sink-topic must be specified.");
-        }
-        if (ProjectTopicName.isParsableFrom(topicName)) {
-            ProjectTopicName projectTopicName = ProjectTopicName.parse(topicName);
-            topicName = projectTopicName.getTopic();
-            topicProject = projectTopicName.getProject();
-        }
-        if (topicProject == null) {
-            System.out.println(
-                    "Failed to start! The sink topic project must be specified using either [--project"
-                            + " PROJECT-NAME] or [--sink-topic projects/PROJECT-NAME/topics/TOPIC-NAME].");
-            return;
-        }
+
         // Parse source subscription from parameters.
         String subscriptionName = parameterTool.get("source-subscription");
         String subscriptionProject = parameterTool.get("project");
