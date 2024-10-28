@@ -81,6 +81,19 @@ class PubSubSinkV2BuilderTest {
     }
 
     @Test
+    void gcpPublisherConfigReturnsNullTransportChannel() {
+        PubSubSinkV2Builder<String> builder = new PubSubSinkV2Builder<>();
+        SerializationSchema<String> serializationSchema = new SimpleStringSchema();
+        GcpPublisherConfig gcpPublisherConfig =
+                GcpPublisherConfig.builder()
+                        .setCredentialsProvider(NoCredentialsProvider.create())
+                        .build();
+
+
+        assertThat(gcpPublisherConfig).hasFieldOrPropertyWithValue("transportChannelProvider", null);
+    }
+
+    @Test
     void builderThrowsNullPointerExceptionOnNullTopicId() {
         PubSubSinkV2Builder<String> builder = PubSubSinkV2.<String>builder();
         SerializationSchema<String> serializationSchema = new SimpleStringSchema();
