@@ -56,7 +56,6 @@ public class GcpPublisherConfig implements Serializable {
             return null;
         }
         return transportChannelProvider.getTransportChannelProvider();
-
     }
 
     public Boolean getEnableCompression() {
