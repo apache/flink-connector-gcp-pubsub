@@ -52,11 +52,11 @@ public class GcpPublisherConfig implements Serializable {
     }
 
     public TransportChannelProvider getTransportChannelProvider() {
-        if (transportChannelProvider==null){
+        if (transportChannelProvider == null) {
             return null;
-        } else{
-            return transportChannelProvider.getTransportChannelProvider();
         }
+        return transportChannelProvider.getTransportChannelProvider();
+
     }
 
     public Boolean getEnableCompression() {
