@@ -89,7 +89,8 @@ class PubSubSinkV2BuilderTest {
                         .setCredentialsProvider(NoCredentialsProvider.create())
                         .build();
 
-        assertThat(gcpPublisherConfig).hasFieldOrPropertyWithValue("transportChannelProvider", null);
+        assertThat(gcpPublisherConfig)
+                .hasFieldOrPropertyWithValue("transportChannelProvider", null);
     }
 
     @Test
