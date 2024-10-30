@@ -28,7 +28,7 @@ import java.math.BigInteger;
 
 /** Helper class to send PubSubMessages to a PubSub topic. */
 class PubSubPublisher {
-    private static final Logger LOG = LoggerFactory.getLogger(PubSubExample.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PubSubPublisher.class);
     private final String projectName;
     private final String topicName;
 
