@@ -52,6 +52,9 @@ public class GcpPublisherConfig implements Serializable {
     }
 
     public TransportChannelProvider getTransportChannelProvider() {
+        if (transportChannelProvider == null) {
+            return null;
+        }
         return transportChannelProvider.getTransportChannelProvider();
     }
 
