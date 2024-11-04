@@ -36,7 +36,4 @@ tools/flink
 tools/flink-*
 tools/releasing/release
 tools/japicmp-output
-*Dockerfile
-*launch.sh
-*pubsub.yaml
 *.vscode/*
