@@ -55,6 +55,7 @@ import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PubsubMessage;
 import io.grpc.ManagedChannelBuilder;
 import org.threeten.bp.Duration;
 
@@ -96,6 +97,7 @@ public abstract class PubSubSource<OutputT>
                 Subscriber.newBuilder(
                         ProjectSubscriptionName.of(projectName(), subscriptionName()).toString(),
                         receiver);
+        String pkgVersion = getClass().getPackage().getImplementationVersion();
         // Channel settings copied from com.google.cloud:google-cloud-pubsub:1.124.1.
         builder.setChannelProvider(
                 SubscriptionAdminSettings.defaultGrpcTransportProviderBuilder()
@@ -107,7 +109,7 @@ public abstract class PubSubSource<OutputT>
                         .setHeaderProvider(
                                 FixedHeaderProvider.create(
                                         "x-goog-api-client",
-                                        "PubSub-Flink-Connector/1.0.0-SNAPSHOT"))
+                                        "flink-connector-gcp-pubsub/" + pkgVersion))
                         .build());
         builder.setFlowControlSettings(
                 FlowControlSettings.newBuilder()
