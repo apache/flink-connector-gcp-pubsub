@@ -18,7 +18,6 @@
 
 package org.apache.flink.streaming.connectors.gcp.pubsub;
 
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.gcp.pubsub.common.PubSubSubscriber;
 
 import com.google.pubsub.v1.AcknowledgeRequest;
@@ -29,10 +28,10 @@ import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -83,22 +82,30 @@ public class BlockingGrpcPubSubSubscriber implements PubSubSubscriber {
 
     @Override
     public void acknowledge(List<String> acknowledgementIds) {
-        if (acknowledgementIds.isEmpty()) {
-            return;
-        }
-
-        // grpc servers won't accept acknowledge requests that are too large so we split the ackIds
-        Tuple2<List<String>, List<String>> splittedAckIds = splitAckIds(acknowledgementIds);
-        while (!splittedAckIds.f0.isEmpty()) {
+        List<List<String>> splittedAckIds = splitAckIds(acknowledgementIds);
+        while (!splittedAckIds.isEmpty()) {
             AcknowledgeRequest acknowledgeRequest =
                     AcknowledgeRequest.newBuilder()
                             .setSubscription(projectSubscriptionName)
-                            .addAllAckIds(splittedAckIds.f0)
+                            .addAllAckIds(splittedAckIds.remove(0))
                             .build();
 
-            stub.withDeadlineAfter(60, SECONDS).acknowledge(acknowledgeRequest);
+            acknowledgeWithRetries(acknowledgeRequest, retries);
+        }
+    }
 
-            splittedAckIds = splitAckIds(splittedAckIds.f1);
+    private void acknowledgeWithRetries(
+            AcknowledgeRequest acknowledgeRequest, int retriesRemaining) {
+        try {
+            stub.withDeadlineAfter(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                    .acknowledge(acknowledgeRequest);
+        } catch (StatusRuntimeException e) {
+            if (retriesRemaining > 0) {
+                acknowledgeWithRetries(acknowledgeRequest, retriesRemaining - 1);
+                return;
+            }
+
+            throw e;
         }
     }
 
@@ -114,21 +121,32 @@ public class BlockingGrpcPubSubSubscriber implements PubSubSubscriber {
     * configurable on the server). We know from experience that it is 512K.
     * @return First list contains no more than 512k bytes, second list contains remaining ids
     */
-    private Tuple2<List<String>, List<String>> splitAckIds(List<String> ackIds) {
-        final int maxPayload = 500 * 1024; // little below 512k bytes to be on the safe side
+    private List<List<String>> splitAckIds(List<String> ackIds) {
+        int queueSize = ackIds.size();
+        final int maxPayload = 500 * 1024; // slightly below 512k bytes to be on the safe side
         final int fixedOverheadPerCall = 100;
         final int overheadPerId = 3;
 
+        List<List<String>> outputLists = new ArrayList<>();
+        List<String> currentList = new ArrayList<>();
         int totalBytes = fixedOverheadPerCall;
 
-        for (int i = 0; i < ackIds.size(); i++) {
-            totalBytes += ackIds.get(i).length() + overheadPerId;
-            if (totalBytes > maxPayload) {
-                return Tuple2.of(ackIds.subList(0, i), ackIds.subList(i, ackIds.size()));
+        for (String ackId : ackIds) {
+            if (totalBytes + ackId.length() + overheadPerId > maxPayload) {
+                outputLists.add(currentList);
+                currentList = new ArrayList<>();
+                totalBytes = fixedOverheadPerCall;
             }
+            currentList.add(ackId);
+            totalBytes += ackId.length() + overheadPerId;
+        }
+        if (!currentList.isEmpty()) {
+            outputLists.add(currentList);
         }
 
-        return Tuple2.of(ackIds, emptyList());
+        assert outputLists.stream().map(List::size).reduce(0, Integer::sum) == queueSize;
+
+        return outputLists;
     }
 
     @Override
