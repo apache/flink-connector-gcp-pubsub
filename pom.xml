@@ -342,6 +342,13 @@ under the License.
 				<version>2.6</version>
 			</dependency>
 
+			<!-- For dependency convergence -->
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>1.16.1</version>
+			</dependency>
+
 			<dependency>
 				<!-- This is the way we get a consistent set of versions of the Google tools -->
 				<groupId>com.google.cloud</groupId>
