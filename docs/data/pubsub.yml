@@ -17,6 +17,6 @@
 ################################################################################
 
 version: 3.1.0
-flink_compatibility: [1.18, 1.19]
+flink_compatibility: ["1.18", "1.19"]
 variants:
   - maven: flink-connector-gcp-pubsub
