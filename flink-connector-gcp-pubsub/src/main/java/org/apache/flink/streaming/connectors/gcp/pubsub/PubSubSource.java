@@ -57,6 +57,7 @@ import static com.google.cloud.pubsub.v1.SubscriptionAdminSettings.defaultCreden
  * PubSub Source, this Source will consume PubSub messages from a subscription and Acknowledge them
  * on the next checkpoint. This ensures every message will get acknowledged at least once.
  */
+@Deprecated
 public class PubSubSource<OUT> extends RichSourceFunction<OUT>
         implements ResultTypeQueryable<OUT>,
                 ParallelSourceFunction<OUT>,
